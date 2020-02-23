@@ -1,0 +1,1 @@
+At first time to try debugging, Eclipse may ask you about the location of source files, just click the "Edit Source Lookup Path" button and change the existing "Path Mapping" to your correct location

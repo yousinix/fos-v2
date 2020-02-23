@@ -1,0 +1,5 @@
+Thanks to student Adham Zahran (Ain Shams University, FCIS, 3rd year) for solving a serious problem with boot Makefrag that prevented the course from running correclty with modern GCC.
+
+His effort along with the work of FOS TAs team led to the migration of the FOS course and development tools to modern Linux and Windows
+
+FOS Team 2016
