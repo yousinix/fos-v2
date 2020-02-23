@@ -118,17 +118,14 @@ include lib/Makefrag
 include user/Makefrag
 
 
-IMAGES = $(OBJDIR)/kern/bochs.img
-
-bochs: $(IMAGES)
-	bochs 'display_library: nogui'
+IMAGE = $(OBJDIR)/kern/fos.img
 
 # For deleting the build
 clean:
 	rm -rf $(OBJDIR)
 
 realclean: clean
-	rm -rf lab$(LAB).tar.gz bochs.out bochs.log
+	rm -rf lab$(LAB).tar.gz
 
 distclean: realclean
 	rm -rf conf/gcc.mk
@@ -170,5 +167,11 @@ $(OBJDIR)/.deps: $(foreach dir, $(OBJDIRS), $(wildcard $(OBJDIR)/$(dir)/*.d))
 always:
 	@:
 
-.PHONY: all always \
+QEMU 		:= qemu-system-i386
+QEMUOPTS = -drive file=$(IMAGE),media=disk,format=raw -smp 2 -m 512 $(QEMUEXTRAS)
+
+qemu:
+	$(V)$(QEMU) -serial mon:stdio $(QEMUOPTS)
+
+.PHONY: all always qemu \
 	handin tarball clean realclean clean-labsetup distclean grade labsetup
