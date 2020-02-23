@@ -69,14 +69,14 @@ $(OBJDIR)/kern/kernel: $(KERN_OBJFILES) $(KERN_BINFILES) kern/kernel.ld
 	$(V)$(NM) -n $@ > $@.sym
 
 # How to build the FOS disk image
-$(OBJDIR)/kern/fos.img: $(OBJDIR)/kern/kernel $(OBJDIR)/boot/boot
+$(IMAGE): $(OBJDIR)/kern/kernel $(OBJDIR)/boot/boot
 	@echo + mk $@
-	$(V)dd if=/dev/zero of=$(OBJDIR)/kern/fos.img~ count=10000 2>/dev/null
-	$(V)dd if=$(OBJDIR)/boot/boot of=$(OBJDIR)/kern/fos.img~ conv=notrunc 2>/dev/null
-	$(V)dd if=$(OBJDIR)/kern/kernel of=$(OBJDIR)/kern/fos.img~ seek=1 conv=notrunc 2>/dev/null
-	$(V)mv $(OBJDIR)/kern/fos.img~ $(OBJDIR)/kern/fos.img
+	$(V)dd if=/dev/zero of=$(IMAGE)~ count=10000 2>/dev/null
+	$(V)dd if=$(OBJDIR)/boot/boot of=$(IMAGE)~ conv=notrunc 2>/dev/null
+	$(V)dd if=$(OBJDIR)/kern/kernel of=$(IMAGE)~ seek=1 conv=notrunc 2>/dev/null
+	$(V)mv $(IMAGE)~ $(IMAGE)
 
-all: $(OBJDIR)/kern/fos.img
+all: $(IMAGE)
 
 grub: $(OBJDIR)/fos-grub
 
