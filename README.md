@@ -16,6 +16,8 @@ FOS is [ASU][asu]'s version, _modified by Dr. Ahmed Salah_, of [MIT][mit]'s [JOS
 1. **Smaller size** — Remove unused packages and files from the environment, 50% smaller than FOSv1.
 1. **Open source** — Allow contributions, improvements and bugs fixes, to make FOS better.
 
+![screenshot](https://user-images.githubusercontent.com/41103290/75132023-0e3f9d80-56de-11ea-9daf-e578bdcdd750.png)
+
 ## Set up Windows Environment
 
 ### Option 1: Cygwin
@@ -32,7 +34,7 @@ FOS is [ASU][asu]'s version, _modified by Dr. Ahmed Salah_, of [MIT][mit]'s [JOS
    - Open a terminal in **`C:\cygwin`** and type:  
      <br />
      ```cmd
-     ./setup-x86.exe -q -P make, perl
+     ./setup-x86.exe -q -P gdb, make, perl
      ```
 
 1. **Toolchain:**
@@ -73,9 +75,14 @@ FOS is [ASU][asu]'s version, _modified by Dr. Ahmed Salah_, of [MIT][mit]'s [JOS
 >
 > INSTALL QEMU & TOOLCHAIN
 
-> ## \*Debugging ![wip][wip-badge]
->
-> USING GDB
+## Debugging in Visual Studio Code
+
+1. [Download][dl-native-debug] **Native Debug** extension for Visual Studio Code.
+1. Add breakpoints to your code.
+1. Press <kbd>F5</kbd> _(or `Debug` > `Start Debugging`)_.
+1. Fix your bugs!
+
+[dl-native-debug]: https://marketplace.visualstudio.com/items?itemName=webfreak.debug
 
 ## Contribute
 

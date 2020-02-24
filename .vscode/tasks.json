@@ -2,7 +2,8 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Compile and Run FOS on QEMU",
+      "label": "build",
+      "detail": "Compile and Run FOS",
       "type": "shell",
       "command": "make && make qemu",
       "group": {
@@ -11,7 +12,30 @@
       }
     },
     {
-      "label": "Clean build files",
+      "label": "build-debug",
+      "detail": "Compile and Run FOS in debug mode",
+      "type": "shell",
+      "command": "make && make qemu-gdb",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "gdb"
+        }
+      }
+    },
+    {
+      "label": "clean",
+      "detail": "Clean build files",
       "type": "shell",
       "command": "make clean",
       "problemMatcher": []

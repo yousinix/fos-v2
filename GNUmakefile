@@ -64,13 +64,19 @@ include user/Makefrag
 
 # Emulators
 
-QEMUOPTS = -drive file=$(IMAGE),media=disk,format=raw -smp 2 -m 512 $(QEMUEXTRAS)
+GDBPORT 	= 26000
+QEMUGDB 	= -gdb tcp::$(GDBPORT)
+QEMUOPTS 	= -drive file=$(IMAGE),media=disk,format=raw -smp 2 -m 512 $(QEMUEXTRAS)
 
 qemu:
 	$(V)$(QEMU) -serial mon:stdio $(QEMUOPTS)
 
+qemu-gdb:
+	$(QEMU) $(QEMUOPTS) -S $(QEMUGDB)
+
 
 # For deleting the build
+
 clean:
 	rm -rf $(OBJDIR)
 
