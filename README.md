@@ -44,7 +44,7 @@ FOS needs an Linux environment to run as expected. For Windows users, the method
    - Open a terminal in **`C:\cygwin`** and type:  
      <br />
      ```cmd
-     ./setup-x86.exe -q -P gdb, make, perl
+     ./setup-x86.exe -q -P gdb,make,perl
      ```
 
 1. **Toolchain:**
