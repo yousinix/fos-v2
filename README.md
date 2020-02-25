@@ -49,8 +49,8 @@ FOS needs an Linux environment to run as expected. For Windows users, the method
 
 1. **Toolchain:**
 
-   - [Download][dl-toolchain] **Binutils** & **GCC** _(Windows x86_64 64-bit)_.
-   - Extract the archives, then move the contents of the **`i386-elf-binutils\`** & **`i386-elf-gcc\`** to **`C:\cygwin\opt\cross\`** _(merge them together)_.
+   - [Download][dl-toolchain] the `i386-elf-toolchain` for Windows.
+   - Extract **`i386-elf-toolchain-windows.rar`** in **`C:\cygwin\opt\cross\`** _(create this folder if it doesn't exist)_.
 
 1. **Emulator:**
 
@@ -69,7 +69,7 @@ FOS needs an Linux environment to run as expected. For Windows users, the method
 
 [cygwin]: https://cygwin.com/
 [dl-cygwin-32]: https://cygwin.com/install.html
-[dl-toolchain]: https://github.com/nativeos/i386-elf-toolchain/releases
+[dl-toolchain]: https://github.com/YoussefRaafatNasry/fos-v2/releases/tag/toolchain
 [qemu]: https://www.qemu.org/
 [dl-qemu]: https://qemu.weilnetz.de/w64/2020/
 
@@ -97,21 +97,12 @@ sudo apt-get install build-essential qemu-system-i386 gdb
 sudo mkdir /opt/cross
 cd /opt/cross
 
-# Install Binutils
-sudo wget https://github.com/nativeos/i386-elf-toolchain/releases/download/preview/i386-elf-binutils-linux-x86_64.tar.bz2
-sudo tar xjf i386-elf-binutils-linux-x86_64.tar.bz2
-sudo rm i386-elf-binutils-linux-x86_64.tar.bz2
+# Install Toolchain
+sudo wget https://github.com/YoussefRaafatNasry/fos-v2/releases/download/toolchain/i386-elf-toolchain-linux.tar.bz2
+sudo tar xjf i386-elf-toolchain-linux.tar.bz2
+sudo rm i386-elf-toolchain-linux.tar.bz2
 
-# Install GCC
-sudo wget https://github.com/nativeos/i386-elf-toolchain/releases/download/preview/i386-elf-gcc-linux-x86_64.tar.bz2
-sudo tar xjf i386-elf-gcc-linux-x86_64.tar.bz2
-sudo rm i386-elf-gcc-linux-x86_64.tar.bz2
-
-# Merge tools
-sudo rsync -a i386-elf-gcc/ i386-elf-binutils/ .
-sudo rm -r i386-elf-gcc/ i386-elf-binutils/
-
-# Update your PATH by updating your ~/.bashrc file.
+# Update your PATH in your ~/.bashrc file.
 export PATH="$PATH:/opt/cross/bin"
 ```
 
