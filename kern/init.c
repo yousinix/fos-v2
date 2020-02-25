@@ -44,31 +44,29 @@ void FOS_initialize()
 	initialize_paging();
 	page_check();
 
-	
 	// Lab 3 user environment initialization functions
 	env_init();
 	idt_init();
 
-	
 	// start the kernel command prompt.
-	while (1==1)
+	while (1)
 	{
-		cprintf("\nWelcome to the FOS kernel command prompt!\n");
-		cprintf("Type 'help' for a list of commands.\n");	
+		cprintf("\n\n\n\n\n");
+		cprintf("FOSv2 started successfully.\n");
+		cprintf("Type 'help' to see commands...\n");
+		cprintf("\n\n");
 		run_command_prompt();
 	}
 }
 
-
 void print_welcome_message()
 {
 	cprintf("\n\n\n");
-	cprintf("\t\t!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-	cprintf("\t\t!!                                                             !!\n");
-	cprintf("\t\t!!                   !! FCIS says HELLO !!                     !!\n");
-	cprintf("\t\t!!                                                             !!\n");
-	cprintf("\t\t!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-	cprintf("\n\n\n\n");	
+	cprintf("FOSv2\n");
+	cprintf("A JOS-based educational operating system,\n");
+	cprintf("created at FCIS - ASU and maintained on GitHub:\n");
+	cprintf("https://github.com/YoussefRaafatNasry/fos-v2\n");
+	cprintf("\n\n\n");
 }
 
 

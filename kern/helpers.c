@@ -64,8 +64,9 @@ void detect_memory()
 
 	number_of_frames = maxpa / PAGE_SIZE;
 
-	cprintf("Physical memory: %dK available, ", (int)(maxpa/1024));
-	cprintf("base = %dK, extended = %dK\n", (int)(size_of_base_mem/1024), (int)(size_of_extended_mem/1024));
+	cprintf("[Physical Memory] %dK\n", (int)(maxpa/1024));
+	cprintf("[Base] %dK\n", (int)(size_of_base_mem/1024));
+	cprintf("[Extended] %dK\n", (int)(size_of_extended_mem/1024));
 }
 
 // --------------------------------------------------------------
@@ -119,7 +120,7 @@ void check_boot_pgdir()
 			break;
 		}
 	}
-	cprintf("check_boot_pgdir() succeeded!\n");
+	cprintf("[Boot Page Dir] Success\n");
 }
 
 // This function returns the physical address of the page containing 'va',
@@ -247,7 +248,7 @@ void page_check()
 	free_frame(pp1);
 	free_frame(pp2);
 
-	cprintf("page_check() succeeded!\n");
+	cprintf("[Page Check] Success\n");
 }
 
 void turn_on_paging()
