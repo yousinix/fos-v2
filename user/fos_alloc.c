@@ -1,5 +1,6 @@
 
 #include <inc/lib.h>
+#include <lib/malloc.c>
 
 void
 _main(void)

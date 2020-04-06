@@ -20,6 +20,7 @@
 void console_initialize(void);
 void cons_putc(int c);
 int cons_getc(void);
+int cons_getc2(void);
 
 void kbd_intr(void); // irq 1
 void serial_intr(void); // irq 4

@@ -1,7 +1,7 @@
-/*	Simple command-line kernel prompt useful for
-	controlling the kernel and exploring the system interactively.
+// Simple command-line kernel prompt useful for
+// controlling the kernel and exploring the system interactively.
 
-
+/*
 KEY WORDS
 ==========
 CONSTANTS:	WHITESPACE, NUM_OF_COMMANDS
@@ -15,6 +15,7 @@ FUNCTIONS:	readline, cprintf, execute_command, run_command_prompt, command_kerne
 #include <inc/memlayout.h>
 #include <inc/assert.h>
 #include <inc/x86.h>
+#include <inc/disk.h>
 
 
 #include <kern/console.h>
@@ -23,11 +24,11 @@ FUNCTIONS:	readline, cprintf, execute_command, run_command_prompt, command_kerne
 #include <kern/trap.h>
 #include <kern/kdebug.h>
 #include <kern/user_environment.h>
+#include <kern/file_manager.h>
+#include <kern/sched.h>
+#include <kern/kheap.h>
+#include <kern/utilities.h>
 
-
-//TODO:LAB3.Hands-on: declare start address variable of "My int array"
-
-//=============================================================
 
 //Structure for each command
 struct Command
@@ -39,97 +40,366 @@ struct Command
 };
 
 //Functions Declaration
+extern uint32 enableBuffering();
+extern uint32 isBufferingEnabled();
+extern void setModifiedBufferLength(uint32 length) ;
+extern uint32 getModifiedBufferLength();
+extern int test_krealloc();
+
 int execute_command(char *command_string);
-int command_writemem(int number_of_arguments, char **arguments);
-int command_readmem(int number_of_arguments, char **arguments);
-int command_meminfo(int , char **);
+int command_writeusermem(int number_of_arguments, char **arguments);
+int command_readusermem(int number_of_arguments, char **arguments);
+int command_readuserblock(int number_of_arguments, char **arguments);
+int command_remove_table(int number_of_arguments, char **arguments);
+int command_allocuserpage(int number_of_arguments, char **arguments);
+int command_meminfo(int number_of_arguments, char **arguments);
 
-//Lab2.Hands.On
-//=============
-//TODO: LAB2 Hands-on: declare the command function here
+int command_set_page_rep_FIFO(int number_of_arguments, char **arguments);
+int command_set_page_rep_CLOCK(int number_of_arguments, char **arguments);
+int command_set_page_rep_LRU(int number_of_arguments, char **arguments);
+int command_set_page_rep_ModifiedCLOCK(int number_of_arguments, char **arguments);
+int command_print_page_rep(int number_of_arguments, char **arguments);
 
+int command_set_uheap_plac_FIRSTFIT(int number_of_arguments, char **arguments);
+int command_set_uheap_plac_BESTFIT(int number_of_arguments, char **arguments);
+int command_set_uheap_plac_NEXTFIT(int number_of_arguments, char **arguments);
+int command_set_uheap_plac_WORSTFIT(int number_of_arguments, char **arguments);
+int command_print_uheap_plac(int number_of_arguments, char **arguments);
 
-//LAB3.Examples
-//=============
-int command_kernel_base_info(int , char **);
-int command_del_kernel_base(int , char **);
-int command_share_page(int , char **);
+int command_set_kheap_plac_CONTALLOC(int number_of_arguments, char **arguments);
+int command_set_kheap_plac_FIRSTFIT(int number_of_arguments, char **arguments);
+int command_set_kheap_plac_BESTFIT(int number_of_arguments, char **arguments);
+int command_set_kheap_plac_NEXTFIT(int number_of_arguments, char **arguments);
+int command_set_kheap_plac_WORSTFIT(int number_of_arguments, char **arguments);
+int command_print_kheap_plac(int number_of_arguments, char **arguments);
 
-//Lab4.Hands.On
-//=============
-int command_show_mapping(int number_of_arguments, char **arguments);
-int command_set_permission(int number_of_arguments, char **arguments);
-int command_share_range(int number_of_arguments, char **arguments);
+int command_disable_modified_buffer(int number_of_arguments, char **arguments);
+int command_enable_modified_buffer(int number_of_arguments, char **arguments);
 
-//Lab5.Examples
-//=============
-int command_nr(int number_of_arguments, char **arguments);
-int command_ap(int , char **);
-int command_fp(int , char **);
+//2016
+int command_disable_buffering(int number_of_arguments, char **arguments);
+int command_enable_buffering(int number_of_arguments, char **arguments);
 
-//Lab5.Hands-on
-//=============
-int command_asp(int, char **);
-int command_cfp(int, char **);
+int command_set_modified_buffer_length(int number_of_arguments, char **arguments);
+int command_get_modified_buffer_length(int number_of_arguments, char **arguments);
 
-//Lab6.Examples
-//=============
-int command_run(int , char **);
-int command_kill(int , char **);
-int command_ft(int , char **);
+//2016: Kernel Heap Tests
+extern int test_kmalloc();
+extern int test_kmalloc_nextfit();
+extern int test_kmalloc_bestfit1();
+extern int test_kmalloc_bestfit2();
+extern int test_kfree();
+extern int test_kfree_bestfit();
+extern int test_kheap_phys_addr();
+extern int test_kheap_virt_addr();
+extern int test_three_creation_functions();
 
+int command_test_kmalloc(int number_of_arguments, char **arguments);
+int command_test_kfree(int number_of_arguments, char **arguments);
+int command_test_kheap_phys_addr(int number_of_arguments, char **arguments);
+int command_test_kheap_virt_addr(int number_of_arguments, char **arguments);
+int command_test_three_creation_functions(int number_of_arguments, char **arguments);
+int command_test_krealloc(int number_of_arguments, char **arguments);
+
+//2018
+int command_sch_RR(int number_of_arguments, char **arguments);
+int command_sch_MLFQ(int number_of_arguments, char **arguments);
+int command_print_sch_method(int number_of_arguments, char **arguments);
+int command_sch_test(int number_of_arguments, char **arguments);
 
 //Array of commands. (initialized)
 struct Command commands[] =
 {
 		{ "help", "Display this list of commands", command_help },
 		{ "kernel_info", "Display information about the kernel", command_kernel_info },
-		{ "wum", "writes one byte to specific location" ,command_writemem},
-		{ "rum", "reads one byte from specific location" ,command_readmem},
-		{ "meminfo", "Display number of free frames", command_meminfo},
+		{ "wum", "writes one byte to specific location in given environment" ,command_writeusermem},
+		{ "rum", "reads one byte from specific location in given environment" ,command_readusermem},
+		{ "wm", "writes one byte to specific location" ,command_writemem_k},
+		{ "rm", "reads one byte from specific location" ,command_readmem_k},
+		{ "rub", "reads block of bytes from specific location in given environment" ,command_readuserblock},
+		{ "kill", "kill the given environment (by its ID) from the system", command_kill_program},
+		{ "rut", "", command_remove_table},
+		{ "aup", "", command_allocuserpage},
+		{ "meminfo", "", command_meminfo},
 
-		//TODO: LAB2 Hands-on: add the commands here
+		{ "schedMLFQ", "switch the scheduler to MLFQ with given # queues & quantums", command_sch_MLFQ},
+		{ "schedRR", "switch the scheduler to RR with given quantum", command_sch_RR},
+		{"sched?", "print current scheduler algorithm", command_print_sch_method},
+		{"schedTest", "Used for turning on/off the scheduler test", command_sch_test},
 
+		{ "run", "runs a single user program", command_run_program },
+		{"load", "load a single user program to mem with status = NEW", commnad_load_env},
+		{"runall", "run all loaded programs", command_run_all},
+		{"printall", "print all loaded programs", command_print_all},
+		{"killall", "kill all environments in the system", command_kill_all},
+		{"lru", "set replacement algorithm to LRU", command_set_page_rep_LRU},
+		{"fifo", "set replacement algorithm to FIFO", command_set_page_rep_FIFO},
+		{"clock", "set replacement algorithm to CLOCK", command_set_page_rep_CLOCK},
+		{"modifiedclock", "set replacement algorithm to modified CLOCK", command_set_page_rep_ModifiedCLOCK},
+		{"rep?", "print current replacement algorithm", command_print_page_rep},
 
-		//LAB3: Examples
-		{ "ikb", "Lab3.Example: shows mapping info of KERNEL_BASE" ,command_kernel_base_info},
-		{ "dkb", "Lab3.Example: delete the mapping of KERNEL_BASE" ,command_del_kernel_base},
-		{ "shr", "Lab3.Example: share one page on another" ,command_share_page},
+		{"uhfirstfit", "set USER heap placement strategy to FIRST FIT", command_set_uheap_plac_FIRSTFIT},
+		{"uhbestfit", "set USER heap placement strategy to BEST FIT", command_set_uheap_plac_BESTFIT},
+		{"uhnextfit", "set USER heap placement strategy to NEXT FIT", command_set_uheap_plac_NEXTFIT},
+		{"uhworstfit", "set USER heap placement strategy to WORST FIT", command_set_uheap_plac_WORSTFIT},
+		{"uheap?", "print current USER heap placement strategy", command_print_uheap_plac},
 
-		//LAB4: Hands-on
-		{ "sm", "Lab4.HandsOn: display the mapping info for the given virtual address", command_show_mapping},
-		{ "sp", "Lab4.HandsOn: set the desired permission to a given virtual address page", command_set_permission},
-		{ "sr", "Lab4.HandsOn: shares the physical frames of the first virtual range with the 2nd virtual range", command_share_range},
+		{"khcontalloc", "set KERNEL heap placement strategy to CONTINUOUS ALLOCATION", command_set_kheap_plac_CONTALLOC},
+		{"khfirstfit", "set KERNEL heap placement strategy to FIRST FIT", command_set_kheap_plac_FIRSTFIT},
+		{"khbestfit", "set KERNEL heap placement strategy to BEST FIT", command_set_kheap_plac_BESTFIT},
+		{"khnextfit", "set KERNEL heap placement strategy to NEXT FIT", command_set_kheap_plac_NEXTFIT},
+		{"khworstfit", "set KERNEL heap placement strategy to WORST FIT", command_set_kheap_plac_WORSTFIT},
+		{"kheap?", "print current KERNEL heap placement strategy", command_print_kheap_plac},
 
-		//LAB5: Examples
-		{ "nr", "Lab5.Example: show the number of references of the physical frame" ,command_nr},
-		{ "ap", "Lab5.Example: allocate one page [if not exists] in the user space at the given virtual address", command_ap},
-		{ "fp", "Lab5.Example: free one page in the user space at the given virtual address", command_fp},
+		//2016
+		{"nobuff", "", command_disable_buffering},
+		{"buff", "", command_enable_buffering},
 
-		//LAB5: Hands-on
-		{ "asp", "Lab5.HandsOn: allocate 2 shared pages with the given virtual addresses" ,command_asp},
-		{ "cfp", "Lab5.HandsOn: count the number of free pages in the given range", command_cfp},
+		{"nomodbuff", "", command_disable_modified_buffer},
+		{"modbuff", "", command_enable_modified_buffer},
 
-		//LAB6: Examples
-		{ "ft", "Lab6.Example: Free table", command_ft},
-		{ "run", "Lab6.Example: Load and Run User Program", command_run},
-		{ "kill", "Lab6.Example: Kill User Program", command_kill},
+		{"modbufflength?", "", command_get_modified_buffer_length},
+		{"modbufflength", "", command_set_modified_buffer_length},
+
+		{"tstkmalloc", "Kernel Heap: test kmalloc (return address, size, mem access...etc)", command_test_kmalloc},
+		{"tstkfree", "Kernel Heap: test kfree (freed frames, mem access...etc)", command_test_kfree},
+		{"tstkphysaddr", "Kernel Heap: test kheap_phys_addr", command_test_kheap_phys_addr},
+		{"tstkvirtaddr", "Kernel Heap: test kheap_virt_addr", command_test_kheap_virt_addr},
+		{"tst3functions", "Env Load: test the creation of new dir, tables and pages WS", command_test_three_creation_functions},
+		{"tstkrealloc","Kernel realloc: test realloc (virtual address = 0)",command_test_krealloc }
 
 };
 
 //Number of commands = size of the array / size of command structure
 #define NUM_OF_COMMANDS (sizeof(commands)/sizeof(commands[0]))
 
+unsigned read_eip();
+
+// ********** This DosKey supported readline function is implemented by **********
+// ********** Abdullah Najuib ( FCIS T.A.), 3rd year student, FCIS, 2012
+
+#define BUFLEN 1024
+//#define CMD_NUMBER sizeof(comds)/sizeof(comds[0])
+
+#define WHITESPACE "\t\r\n "
+#define HISTORY_MAX 19
+int last_command_idx = -1;
+char command_history[HISTORY_MAX+1][BUFLEN];
+char empty[BUFLEN];
+
+void clearandwritecommand(int* i, int commandidx, char* buf, int *last_index) {
+	for (int j = 0; j < *i; j++) {
+		cputchar('\b');
+	}
+	int len = strlen(command_history[commandidx]);
+	memcpy(buf, empty, BUFLEN);
+	for (*i = 0; *i < len; (*i)++) {
+		cputchar(command_history[commandidx][*i]);
+		buf[*i] = command_history[commandidx][*i];
+	}
+	*last_index = len;
+}
+
+void RoundAutoCompleteCommandWithTheSamePrefix(int old_buf_len, char* prefix_element,
+		char* buf, int* i, int *last_index) {
+	for (int j = 0; j < old_buf_len; j++) {
+		cputchar('\b');
+	}
+	int len = strlen(prefix_element);
+	memcpy(buf, empty, BUFLEN);
+	for (*i = 0; *i < len; (*i)++) {
+		cputchar(prefix_element[*i]);
+		buf[*i] = prefix_element[*i];
+	}
+	*last_index = len;
+}
+
+char PrefixList[100][1024];
+void clear_prefix_list()
+{
+	for (int i = 0; i < 100; ++i) {
+		memset(PrefixList[i], 0, 1024);}
+}
+
+void command_prompt_readline(const char *prompt, char* buf) {
+	int i, c, echoing, lastIndex;
+	if (prompt != NULL)
+		cprintf("%s", prompt);
+
+	int commandidx = last_command_idx + 1;
+	int prefix_list_idx = lastIndex = i = 0;
+	int prefix_list_size, last_c;
+	echoing = iscons(0);
+	while (1) {
+		c = getchar();
+		if (i > lastIndex)
+			lastIndex = i;
+		if (c < 0) {
+
+			if (c != -E_EOF)
+				cprintf("read error: %e\n", c);
+			return;
+		} else if (c == 226) { // Up arrow
+			if (commandidx)
+				commandidx--;
+			clearandwritecommand(&i, commandidx, buf, &lastIndex);
+		} else if (c == 227) { // Down arrow
+			if (commandidx < last_command_idx)
+				commandidx++;
+			if (last_command_idx >= 0)
+				clearandwritecommand(&i, commandidx, buf, &lastIndex);
+		} else if (c == 9) { // Tab button
+			if (last_c != 9) {
+				clear_prefix_list(PrefixList, 100);
+				if (strlen(buf) == 0 || last_c == 255)
+					continue;
+				char *arguments[MAX_ARGUMENTS];
+				int number_of_arguments = prefix_list_size = 0;
+				char temp_buf[1024];
+				strcpy(temp_buf, buf);
+				int bufLength = strlen(buf);
+				if (buf[bufLength - 1] == ' ')
+					continue;
+				strsplit(temp_buf, WHITESPACE, arguments, &number_of_arguments);
+				int it_str = 0;
+				if (number_of_arguments > 1) {
+					if((strcmp(arguments[0], "run") != 0) && (strcmp(arguments[0], "load") != 0)) // to autocomplete only in case that the command take arguments and defined arguments (run & load) only
+						continue;
+					char temp[1024] = "";
+					int TotalLen = bufLength - strlen(arguments[number_of_arguments - 1]);
+					for (int var = 0; var < TotalLen; ++var) {
+						temp[it_str++] = buf[var];
+					}
+					strcpy(buf, temp);   //buf contains all arguments except the last one
+					strcpy(temp_buf, arguments[number_of_arguments - 1]);   //temp_buf contains the last argument
+				}
+				int it_prefix_list = 0;
+				if(number_of_arguments == 1)
+				{
+					for (int var = 0; var < NUM_OF_COMMANDS; ++var) {
+						int x = strncmp(temp_buf, commands[var].name, strlen(temp_buf));
+						if (x == 0) {
+							it_str = -1;
+							char string[1024] = "";
+							for (int var3 = 0; var3 < strlen(commands[var].name); ++var3) {
+								string[++it_str] = commands[var].name[var3];
+							}
+							memset(PrefixList[it_prefix_list], 0, 1024);
+							strncpy(PrefixList[it_prefix_list], string, it_str + 1);
+							it_prefix_list++;
+						}
+					}
+				}
+				else
+				{
+					for (int var = 0; var < NUM_USER_PROGS; ++var) {
+						int x = strncmp(temp_buf, ptr_UserPrograms[var].name, strlen(temp_buf));
+						if (x == 0) {
+							it_str = -1;
+							char string[1024] = "";
+							if (number_of_arguments > 1) {
+								for (int var2 = 0; var2 < strlen(buf); ++var2) {
+									string[++it_str] = buf[var2];
+								}
+							}
+							for (int var3 = 0; var3 < strlen(ptr_UserPrograms[var].name) ; ++var3) {
+								string[++it_str] = ptr_UserPrograms[var].name[var3];
+							}
+							memset(PrefixList[it_prefix_list], 0, 1024);
+							strncpy(PrefixList[it_prefix_list], string, it_str + 1);
+							it_prefix_list++;
+						}
+					}
+				}
+				prefix_list_size = it_prefix_list;
+				if (it_prefix_list) {
+					prefix_list_idx = it_str = 0;
+					for (int var2 = 0; var2 < strlen(PrefixList[0]); ++var2) {
+						buf[it_str++] = PrefixList[0][var2];}
+					for (int var = 0; var < bufLength; ++var) {
+						cputchar('\b');}
+					for (int j = 0; j < strlen(buf); ++j) {
+						cputchar(buf[j]);}
+					i = lastIndex = strlen(buf);
+				}
+			}
+			else {
+				if (prefix_list_size > 0) {	int prev = prefix_list_idx;
+				prefix_list_idx = (prefix_list_idx + 1) % prefix_list_size;
+				RoundAutoCompleteCommandWithTheSamePrefix(strlen(PrefixList[prev]), PrefixList[prefix_list_idx], buf, &i, &lastIndex);
+				}
+			}
+		}
+
+		else if (c == 228) { // left arrow
+			if (i > 0) {
+				i--;
+				cputchar(c);
+			}
+		} else if (c == 229) { // right arrow
+			if (i < lastIndex) {
+				i++;
+				cputchar(c);
+			}
+		}
+		else if (c == 0xE9 && i > 0) {		 // KEY_DEL
+			for (int var = i; var <= lastIndex; ++var) {
+				buf[var] = buf[var + 1];
+			}
+			lastIndex--;
+		}
+		else if (c >= ' ' && i < BUFLEN - 1 && c != 229 && c != 228) {
+			if (echoing)
+				cputchar(c);
+			buf[i++] = c;
+			lastIndex++;
+		} else if (c == '\b' && i > 0) {
+
+			if (echoing)
+				cputchar(c);
+			for (int var = i; var <= i; ++var) {
+				buf[var - 1] = buf[var];
+			}
+			i--;
+		} else if (c == '\n' || c == '\r') {
+
+			if (echoing)
+				cputchar(c);
+
+			buf[lastIndex] = 0;
+			if (last_command_idx == HISTORY_MAX) {
+				for (int idx = 0; idx < HISTORY_MAX; idx++) {
+					memcpy(command_history[idx], command_history[idx + 1],
+							BUFLEN);
+				}
+				memcpy(command_history[HISTORY_MAX], buf, BUFLEN);
+			} else if (strcmp(command_history[last_command_idx], buf) != 0) {
+				memcpy(command_history[++last_command_idx], buf, BUFLEN);
+			}
+			return;
+
+		}
+		last_c = c;
+	}
+}
+// ******************************************************************
+// ******************************************************************
 
 //invoke the command prompt
 void run_command_prompt()
 {
-	char command_line[1024];
+	char command_line[BUFLEN];
 
 	while (1==1)
 	{
-		//get command line
-		readline("FOS> ", command_line);
+		//readline("FOS> ", command_line);
+
+		// ********** This DosKey supported readline function is a combined implementation from **********
+		// ********** 		Mohamed Raafat & Mohamed Yousry, 3rd year students, FCIS, 2017		**********
+		// ********** 				Combined, edited and modified by TA\Ghada Hamed				**********
+		memset(command_line, 0, sizeof(command_line));
+		command_prompt_readline("FOS> ", command_line);
+
 
 		//parse and execute the command
 		if (command_line != NULL)
@@ -194,6 +464,8 @@ int command_help(int number_of_arguments, char **arguments)
 
 	cprintf("-------------------\n");
 
+	for (i = 0; i < NUM_USER_PROGS; i++)
+		cprintf("run %s - %s [User Program]\n", ptr_UserPrograms[i].name, ptr_UserPrograms[i].desc);
 	return 0;
 }
 
@@ -212,197 +484,657 @@ int command_kernel_info(int number_of_arguments, char **arguments )
 	return 0;
 }
 
-
-int command_readmem(int number_of_arguments, char **arguments)
+int command_writeusermem(int number_of_arguments, char **arguments)
 {
-	unsigned int address = strtol(arguments[1], NULL, 16);
-	unsigned char *ptr = (unsigned char *)(address ) ;
+	int32 envId = strtol(arguments[1],NULL, 10);
+	struct Env* env = NULL;
+	envid2env(envId, &env, 0 );
 
-	cprintf("value at address %x = %c\n", ptr, *ptr);
+	int address = strtol(arguments[3], NULL, 16);
+
+	if(env == NULL) return 0;
+
+	uint32 oldDir = rcr3();
+	//lcr3((uint32) K_PHYSICAL_ADDRESS( env->env_pgdir));
+	lcr3((uint32) (env->env_cr3));
+
+	unsigned char *ptr = (unsigned char *)(address) ;
+
+	//Write the given Character
+	*ptr = arguments[2][0];
+	lcr3(oldDir);
 
 	return 0;
 }
 
-int command_writemem(int number_of_arguments, char **arguments)
+int command_writemem_k(int number_of_arguments, char **arguments)
 {
-	unsigned int address = strtol(arguments[1], NULL, 16);
+	unsigned char* address = (unsigned char*)strtol(arguments[1], NULL, 16)+KERNEL_BASE;
+	int size = strtol(arguments[2], NULL, 10);
+	int c, i=0;
+	int stringLen = strlen(arguments[3]);
+
+	for(c=0; c<size; c++)
+	{
+		for(i=0;i < stringLen; i++)
+		{
+			*address = arguments[3][i];
+			address++;
+		}
+	}
+	return 0;
+
+
+}
+
+int command_readusermem(int number_of_arguments, char **arguments)
+{
+	int32 envId = strtol(arguments[1],NULL, 10);
+	struct Env* env = NULL;
+	envid2env(envId, &env, 0 );
+
+	int address = strtol(arguments[2], NULL, 16);
+
+	if(env == NULL) return 0;
+
+	uint32 oldDir = rcr3();
+	//lcr3((uint32) K_PHYSICAL_ADDRESS( env->env_pgdir));
+	lcr3((uint32)( env->env_cr3));
+
 	unsigned char *ptr = (unsigned char *)(address) ;
 
-	*ptr = arguments[2][0];
+	//Write the given Character
+	cprintf("value at address %x = %c\n", address, *ptr);
+
+	lcr3(oldDir);
+	return 0;
+}
+
+int command_readmem_k(int number_of_arguments, char **arguments)
+{
+	unsigned char* address = (unsigned char*)strtol(arguments[1], NULL, 16)+KERNEL_BASE;
+	int size = strtol(arguments[2], NULL, 10);
+	int i=0;
+	for(;i < size; i++)
+	{
+		cprintf("%c",*address++);
+	}
+	cprintf("\n");
+	return 0;
+}
+
+
+int command_readuserblock(int number_of_arguments, char **arguments)
+{
+	int32 envId = strtol(arguments[1],NULL, 10);
+	struct Env* env = NULL;
+	envid2env(envId, &env, 0 );
+
+	int address = strtol(arguments[2], NULL, 16);
+	int nBytes = strtol(arguments[3], NULL, 10);
+
+	unsigned char *ptr = (unsigned char *)(address) ;
+	//Write the given Character
+
+	if(env == NULL) return 0;
+
+	uint32 oldDir = rcr3();
+	//lcr3((uint32) K_PHYSICAL_ADDRESS( env->env_pgdir));
+	lcr3((uint32)( env->env_cr3));
+
+	int i;
+	for(i = 0;i<nBytes; i++)
+	{
+		cprintf("%08x : %02x  %c\n", ptr, *ptr, *ptr);
+		ptr++;
+	}
+	lcr3(oldDir);
+
+	return 0;
+}
+
+int command_remove_table(int number_of_arguments, char **arguments)
+{
+	int32 envId = strtol(arguments[1],NULL, 10);
+	struct Env* env = NULL;
+	envid2env(envId, &env, 0 );
+	if(env == 0) return 0;
+
+	uint32 address = strtol(arguments[2], NULL, 16);
+	unsigned char *va = (unsigned char *)(address) ;
+	uint32 table_pa = env->env_page_directory[PDX(address)] & 0xFFFFF000;
+
+	//remove the table
+	if(USE_KHEAP && !CHECK_IF_KERNEL_ADDRESS(va))
+	{
+		kfree((void*)kheap_virtual_address(table_pa));
+	}
+	else
+	{
+		// get the physical address and Frame_Info of the page table
+		struct Frame_Info *table_frame_info = to_frame_info(table_pa);
+		// set references of the table frame to 0 then free it by adding
+		// to the free frame list
+		table_frame_info->references = 0;
+		free_frame(table_frame_info);
+	}
+
+	// set the corresponding entry in the directory to 0
+	uint32 dir_index = PDX(va);
+	env->env_page_directory[dir_index] &= (~PERM_PRESENT);
+	tlbflush();
+	return 0;
+}
+
+int command_allocuserpage(int number_of_arguments, char **arguments)
+{
+	int32 envId = strtol(arguments[1],NULL, 10);
+	struct Env* env = NULL;
+	envid2env(envId, &env, 0 );
+	if(env == 0) return 0;
+
+	uint32 address = strtol(arguments[2], NULL, 16);
+	unsigned char *va = (unsigned char *)(address) ;
+
+	// Allocate a single frame from the free frame list
+	struct Frame_Info * ptr_frame_info ;
+	int ret = allocate_frame(&ptr_frame_info);
+	if (ret == E_NO_MEM)
+	{
+		cprintf("ERROR: no enough memory\n");
+		return 0;
+	}
+
+	// Map this frame to the given user virtual address
+	map_frame(env->env_page_directory, ptr_frame_info, va, PERM_WRITEABLE | PERM_USER);
 
 	return 0;
 }
 
 int command_meminfo(int number_of_arguments, char **arguments)
 {
-	cprintf("Free frames = %d\n", calculate_free_frames());
-	return 0;
-}
+	struct freeFramesCounters counters =calculate_available_frames();
+	cprintf("Total available frames = %d\nFree Buffered = %d\nFree Not Buffered = %d\nModified = %d\n",
+			counters.freeBuffered+ counters.freeNotBuffered+ counters.modified, counters.freeBuffered, counters.freeNotBuffered, counters.modified);
 
-//===========================================================================
-//Lab2.Hands.On
-//=============
-//TODO: LAB2 Hands-on: write the command function here
-
-
-//===========================================================================
-//Lab3.Examples
-//=============
-int command_kernel_base_info(int number_of_arguments, char **arguments)
-{
-	//TODO: LAB3 Example: fill this function. corresponding command name is "ikb"
-	//Comment the following line
-	panic("Function is not implemented yet!");
+	cprintf("Num of calls for kheap_virtual_address [in last run] = %d\n", numOfKheapVACalls);
 
 	return 0;
 }
 
 
-int command_del_kernel_base(int number_of_arguments, char **arguments)
+int command_run_program(int number_of_arguments, char **arguments)
 {
-	//TODO: LAB3 Example: fill this function. corresponding command name is "dkb"
-	//Comment the following line
-	panic("Function is not implemented yet!");
+	struct Env* env;
+	if(USE_KHEAP)
+	{
+		if(number_of_arguments < 3)
+		{
+			cprintf("Error: Please specify a working set size in the third argument, aborting.\n");
+			return 0;
+		}
+		unsigned int percent_WS_pages_to_remove;
+		if (number_of_arguments == 4)
+			percent_WS_pages_to_remove = strtol(arguments[3], NULL, 10);
+		else
+			percent_WS_pages_to_remove = 0;
+
+		env = env_create(arguments[1], strtol(arguments[2], NULL, 10), percent_WS_pages_to_remove);
+	}
+	else
+	{
+		unsigned int percent_WS_pages_to_remove;
+		if (number_of_arguments == 3)
+			percent_WS_pages_to_remove = strtol(arguments[2], NULL, 10);
+		else
+			percent_WS_pages_to_remove = 0;
+
+		//env = env_create(arguments[1], __PWS_MAX_SIZE, percent_WS_pages_to_remove);
+		env = env_create(arguments[1], strtol(arguments[2], NULL, 10), percent_WS_pages_to_remove);
+	}
+
+	if(env == NULL) return 0;
+	cprintf("\nEnvironment Id= %d\n",env->env_id);
+
+	numOfKheapVACalls = 0;
+
+	sched_new_env(env);
+	sched_run_env(env->env_id);
 
 	return 0;
 }
 
-int command_share_page(int number_of_arguments, char **arguments)
+int command_kill_program(int number_of_arguments, char **arguments)
 {
-	//TODO: LAB3 Example: fill this function. corresponding command name is "shr"
-	//Comment the following line
-	panic("Function is not implemented yet!");
+	int32 envId = strtol(arguments[1],NULL, 10);
+
+	sched_kill_env(envId);
 
 	return 0;
 }
 
-//===========================================================================
-//Lab4.Hands.On
-//=============
-int command_show_mapping(int number_of_arguments, char **arguments)
+int commnad_load_env(int number_of_arguments, char **arguments)
 {
-	//TODO: LAB4 Hands-on: fill this function. corresponding command name is "sm"
-	//Comment the following line
-	panic("Function is not implemented yet!");
+	struct Env* env;
+	if(USE_KHEAP)
+	{
+		if(number_of_arguments < 3)
+		{
+			cprintf("Error: Please specify a working set size in the third argument, aborting.\n");
+			return 0;
+		}
+		unsigned int percent_WS_pages_to_remove;
+		if (number_of_arguments == 4)
+			percent_WS_pages_to_remove = strtol(arguments[3], NULL, 10);
+		else
+			percent_WS_pages_to_remove = 0;
+
+		env = env_create(arguments[1], strtol(arguments[2], NULL, 10), percent_WS_pages_to_remove);
+	}
+	else
+	{
+		unsigned int percent_WS_pages_to_remove;
+		if (number_of_arguments == 3)
+			percent_WS_pages_to_remove = strtol(arguments[2], NULL, 10);
+		else
+			percent_WS_pages_to_remove = 0;
+
+		env = env_create(arguments[1], __PWS_MAX_SIZE, percent_WS_pages_to_remove);
+	}
+
+	if (env == NULL)
+		return 0 ;
+
+	sched_new_env(env) ;
+
+	cprintf("\nEnvironment Id= %d\n",env->env_id);
+	return 0;
+}
+
+int command_run_all(int number_of_arguments, char **arguments)
+{
+	numOfKheapVACalls = 0;
+	sched_run_all();
 
 	return 0 ;
 }
 
-int command_set_permission(int number_of_arguments, char **arguments)
+int command_print_all(int number_of_arguments, char **arguments)
 {
-	//TODO: LAB4 Hands-on: fill this function. corresponding command name is "sp"
-	//Comment the following line
-	panic("Function is not implemented yet!");
+	sched_print_all();
 
 	return 0 ;
 }
 
-int command_share_range(int number_of_arguments, char **arguments)
+int command_kill_all(int number_of_arguments, char **arguments)
 {
-	//TODO: LAB4 Hands-on: fill this function. corresponding command name is "sr"
-	//Comment the following line
-	panic("Function is not implemented yet!");
-
-	return 0;
-}
-
-//===========================================================================
-//Lab5.Examples
-//==============
-//[1] Number of references on the given physical address
-int command_nr(int number_of_arguments, char **arguments)
-{
-	//TODO: LAB5 Example: fill this function. corresponding command name is "nr"
-	//Comment the following line
-	panic("Function is not implemented yet!");
-
-	return 0;
-}
-
-//[2] Allocate Page: If the given user virtual address is mapped, do nothing. Else, allocate a single frame and map it to a given virtual address in the user space
-int command_ap(int number_of_arguments, char **arguments)
-{
-	//TODO: LAB5 Example: fill this function. corresponding command name is "ap"
-	//Comment the following line
-	//panic("Function is not implemented yet!");
-	
-	uint32 va = strtol(arguments[1], NULL, 16);
-	struct Frame_Info* ptr_frame_info;
-	int ret = allocate_frame(&ptr_frame_info) ;
-	map_frame(ptr_page_directory, ptr_frame_info, (void*)va, PERM_USER | PERM_WRITEABLE);
+	sched_kill_all();
 
 	return 0 ;
 }
 
-//[3] Free Page: Un-map a single page at the given virtual address in the user space
-int command_fp(int number_of_arguments, char **arguments)
+int command_set_page_rep_LRU(int number_of_arguments, char **arguments)
 {
-	//TODO: LAB5 Example: fill this function. corresponding command name is "fp"
-	//Comment the following line
-	//panic("Function is not implemented yet!");
-	
-	uint32 va = strtol(arguments[1], NULL, 16);
-	// Un-map the page at this address
-	unmap_frame(ptr_page_directory, (void*)va);
+	setPageReplacmentAlgorithmLRU();
+	cprintf("Page replacement algorithm is now LRU\n");
+	return 0;
+}
+
+int command_set_page_rep_CLOCK(int number_of_arguments, char **arguments)
+{
+	setPageReplacmentAlgorithmCLOCK();
+	cprintf("Page replacement algorithm is now CLOCK\n");
+	return 0;
+}
+
+int command_set_page_rep_FIFO(int number_of_arguments, char **arguments)
+{
+	setPageReplacmentAlgorithmFIFO();
+	cprintf("Page replacement algorithm is now FIFO\n");
+	return 0;
+}
+
+int command_set_page_rep_ModifiedCLOCK(int number_of_arguments, char **arguments)
+{
+	setPageReplacmentAlgorithmModifiedCLOCK();
+	cprintf("Page replacement algorithm is now Modified CLOCK\n");
+	return 0;
+}
+
+/*2018*///BEGIN======================================================
+int command_sch_RR(int number_of_arguments, char **arguments)
+{
+	uint8 quantum = strtol(arguments[1], NULL, 10);
+
+	sched_init_RR(quantum);
+	cprintf("Scheduler is now set to Round Robin with quantum %d ms\n", quantums[0]);
+	return 0;
+}
+int command_sch_MLFQ(int number_of_arguments, char **arguments)
+{
+	uint8 numOfLevels = strtol(arguments[1], NULL, 10);
+	uint8 quantumOfEachLevel[MAX_ARGUMENTS - 2] ;
+	for (int i = 2 ; i < number_of_arguments ; i++)
+	{
+		quantumOfEachLevel[i-2] = strtol(arguments[i], NULL, 10);
+	}
+
+	sched_init_MLFQ(numOfLevels, quantumOfEachLevel);
+
+	cprintf("Scheduler is now set to MLFQ with quantums: ");
+	for (int i = 0 ; i < num_of_ready_queues; i++)
+	{
+		cprintf("%d   ", quantums[i]) ;
+	}
+	cprintf("\n");
+	return 0;
+}
+int command_print_sch_method(int number_of_arguments, char **arguments)
+{
+	if (isSchedMethodMLFQ())
+	{
+		cprintf("Current scheduler method is MLFQ with quantums: ");
+		for (int i = 0 ; i < num_of_ready_queues; i++)
+		{
+			cprintf("%d   ", quantums[i]) ;
+		}
+		cprintf("\n");
+	}
+	else if (isSchedMethodRR())
+	{
+		cprintf("Current scheduler method is Round Robin with quantum %d ms\n", quantums[0]);
+	}
+
+	else
+		cprintf("Current scheduler method is UNDEFINED\n");
+
+	return 0;
+}
+int command_sch_test(int number_of_arguments, char **arguments)
+{
+	int status  = strtol(arguments[1], NULL, 10);
+	chksch(status);
+	if (status == 0)
+		cprintf("Testing the scheduler is TURNED OFF\n");
+	else if (status == 1)
+		cprintf("Testing the scheduler is TURNED ON\n");
+	return 0;
+}
+
+/*2018*///END======================================================
+
+
+/*2015*///BEGIN======================================================
+int command_print_page_rep(int number_of_arguments, char **arguments)
+{
+	if (isPageReplacmentAlgorithmCLOCK())
+		cprintf("Page replacement algorithm is CLOCK\n");
+	else if (isPageReplacmentAlgorithmLRU())
+		cprintf("Page replacement algorithm is LRU\n");
+	else if (isPageReplacmentAlgorithmFIFO())
+		cprintf("Page replacement algorithm is FIFO\n");
+	else if (isPageReplacmentAlgorithmModifiedCLOCK())
+		cprintf("Page replacement algorithm is Modified CLOCK\n");
+	else
+		cprintf("Page replacement algorithm is UNDEFINED\n");
 
 	return 0;
 }
 
-//===========================================================================
-//Lab5.Hands-on
-//==============
-//[1] Allocate Shared Pages
-int command_asp(int number_of_arguments, char **arguments)
+
+int command_set_uheap_plac_FIRSTFIT(int number_of_arguments, char **arguments)
 {
-	//TODO: LAB5 Hands-on: fill this function. corresponding command name is "asp"
-	//Comment the following line
-	panic("Function is not implemented yet!");
+	setUHeapPlacementStrategyFIRSTFIT();
+	cprintf("User Heap placement strategy is now FIRST FIT\n");
+	return 0;
+}
+
+int command_set_uheap_plac_BESTFIT(int number_of_arguments, char **arguments)
+{
+	setUHeapPlacementStrategyBESTFIT();
+	cprintf("User Heap placement strategy is now BEST FIT\n");
+	return 0;
+}
+
+int command_set_uheap_plac_NEXTFIT(int number_of_arguments, char **arguments)
+{
+	setUHeapPlacementStrategyNEXTFIT();
+	cprintf("User Heap placement strategy is now NEXT FIT\n");
+	return 0;
+}
+int command_set_uheap_plac_WORSTFIT(int number_of_arguments, char **arguments)
+{
+	setUHeapPlacementStrategyWORSTFIT();
+	cprintf("User Heap placement strategy is now WORST FIT\n");
+	return 0;
+}
+
+int command_print_uheap_plac(int number_of_arguments, char **arguments)
+{
+	if (isUHeapPlacementStrategyFIRSTFIT())
+		cprintf("User Heap placement strategy is FIRST FIT\n");
+	else if (isUHeapPlacementStrategyBESTFIT())
+		cprintf("User Heap placement strategy is BEST FIT\n");
+	else if (isUHeapPlacementStrategyNEXTFIT())
+		cprintf("User Heap placement strategy is NEXT FIT\n");
+	else if (isUHeapPlacementStrategyWORSTFIT())
+		cprintf("User Heap placement strategy is WORST FIT\n");
+	else
+		cprintf("User Heap placement strategy is UNDEFINED\n");
 
 	return 0;
 }
 
+/*2015*///END======================================================
 
-//[2] Count Free Pages in Range
-int command_cfp(int number_of_arguments, char **arguments)
+/*2017*///BEGIN======================================================
+
+int command_set_kheap_plac_CONTALLOC(int number_of_arguments, char **arguments)
 {
-	//TODO: LAB5 Hands-on: fill this function. corresponding command name is "cfp"
-	//Comment the following line
-	panic("Function is not implemented yet!");
+	setKHeapPlacementStrategyCONTALLOC();
+	cprintf("Kernel Heap placement strategy is now FIRST FIT\n");
+	return 0;
+}
+
+int command_set_kheap_plac_FIRSTFIT(int number_of_arguments, char **arguments)
+{
+	setKHeapPlacementStrategyFIRSTFIT();
+	cprintf("Kernel Heap placement strategy is now FIRST FIT\n");
+	return 0;
+}
+
+int command_set_kheap_plac_BESTFIT(int number_of_arguments, char **arguments)
+{
+	setKHeapPlacementStrategyBESTFIT();
+	cprintf("Kernel Heap placement strategy is now BEST FIT\n");
+	return 0;
+}
+
+int command_set_kheap_plac_NEXTFIT(int number_of_arguments, char **arguments)
+{
+	setKHeapPlacementStrategyNEXTFIT();
+	cprintf("Kernel Heap placement strategy is now NEXT FIT\n");
+	return 0;
+}
+int command_set_kheap_plac_WORSTFIT(int number_of_arguments, char **arguments)
+{
+	setKHeapPlacementStrategyWORSTFIT();
+	cprintf("Kernel Heap placement strategy is now WORST FIT\n");
+	return 0;
+}
+
+int command_print_kheap_plac(int number_of_arguments, char **arguments)
+{
+	if (isKHeapPlacementStrategyCONTALLOC())
+		cprintf("Kernel Heap placement strategy is CONTINUOUS ALLOCATION\n");
+	else if (isKHeapPlacementStrategyFIRSTFIT())
+		cprintf("Kernel Heap placement strategy is FIRST FIT\n");
+	else if (isKHeapPlacementStrategyBESTFIT())
+		cprintf("Kernel Heap placement strategy is BEST FIT\n");
+	else if (isKHeapPlacementStrategyNEXTFIT())
+		cprintf("Kernel Heap placement strategy is NEXT FIT\n");
+	else if (isKHeapPlacementStrategyWORSTFIT())
+		cprintf("Kernel Heap placement strategy is WORST FIT\n");
+	else
+		cprintf("Kernel Heap placement strategy is UNDEFINED\n");
 
 	return 0;
 }
 
-//===========================================================================
-//Lab6.Examples
-//=============
-int command_run(int number_of_arguments, char **arguments)
-{
-	//[1] Create and initialize a new environment for the program to be run
-	struct UserProgramInfo* ptr_program_info = env_create(arguments[1]);
-	if(ptr_program_info == 0) return 0;
+/*2017*///END======================================================
 
-	//[2] Run the created environment using "env_run" function
-	env_run(ptr_program_info->environment);
+int command_disable_modified_buffer(int number_of_arguments, char **arguments)
+{
+	if(!isBufferingEnabled())
+	{
+		cprintf("Buffering is not enabled. Please enable buffering first.\n");
+	}
+	else
+	{
+		enableModifiedBuffer(0);
+		cprintf("Modified Buffer is now DISABLED\n");
+	}
 	return 0;
 }
 
-int command_kill(int number_of_arguments, char **arguments)
-{
-	//[1] Get the user program info of the program (by searching in the "userPrograms" array
-	struct UserProgramInfo* ptr_program_info = get_user_program_info(arguments[1]) ;
-	if(ptr_program_info == 0) return 0;
 
-	//[2] Kill its environment using "env_free" function
-	env_free(ptr_program_info->environment);
-	ptr_program_info->environment = NULL;
+int command_enable_modified_buffer(int number_of_arguments, char **arguments)
+{
+	//if(!isBufferingEnabled())
+	{
+		//cprintf("Buffering is not enabled. Please enable buffering first.\n");
+	}
+	//else
+	{
+		enableModifiedBuffer(1);
+		enableBuffering(1);
+		cprintf("Modified Buffer is now ENABLED\n");
+	}
 	return 0;
 }
 
-int command_ft(int number_of_arguments, char **arguments)
-{
-	//TODO: LAB6 Example: fill this function. corresponding command name is "ft"
-	//Comment the following line
+/*2016 ============================================================================*/
 
+int command_disable_buffering(int number_of_arguments, char **arguments)
+{
+	enableBuffering(0);
+	enableModifiedBuffer(0);
+	cprintf("Buffering is now DISABLED\n");
 	return 0;
 }
 
+
+int command_enable_buffering(int number_of_arguments, char **arguments)
+{
+	enableBuffering(1);
+	enableModifiedBuffer(1);
+	if(getModifiedBufferLength() == 0)
+	{
+		cprintf("Modified buffer enabled but with length = 0\n");
+		char str[100];
+		readline("Please enter the modified buff length = ", str);
+		setModifiedBufferLength(strtol(str, NULL, 10));
+		cprintf("Modified buffer length updated = %d\n", getModifiedBufferLength());
+	}
+	cprintf("Buffering is now ENABLED\n");
+	return 0;
+}
+
+int command_set_modified_buffer_length(int number_of_arguments, char **arguments)
+{
+	if(!isBufferingEnabled())
+	{
+		cprintf("Buffering is not enabled. Please enable buffering to use the modified buffer.\n");
+	}
+	else if (!isModifiedBufferEnabled())
+	{
+		cprintf("Modified Buffering is not enabled. Please enable modified buffering.\n");
+	}
+	setModifiedBufferLength(strtol(arguments[1], NULL, 10));
+	cprintf("Modified buffer length updated = %d\n", getModifiedBufferLength());
+	return 0;
+}
+
+int command_get_modified_buffer_length(int number_of_arguments, char **arguments)
+{
+	if(!isBufferingEnabled())
+	{
+		cprintf("Buffering is not enabled. Please enable buffering to use the modified buffer.\n");
+	}
+	else if (!isModifiedBufferEnabled())
+	{
+		cprintf("Modified Buffering is not enabled. Please enable modified buffering.\n");
+	}
+	cprintf("Modified buffer length = %d\n", getModifiedBufferLength());
+	return 0;
+}
+
+/*TESTING Commands*/
+int command_test_kmalloc(int number_of_arguments, char **arguments)
+{
+	int testNum = 0 ;
+	if (number_of_arguments==2)
+		testNum = strtol(arguments[1], NULL, 10);
+
+	if (isKHeapPlacementStrategyNEXTFIT())
+	{
+		if (testNum == 0)
+		{
+			cprintf("Error: [Kernel.NextFit] must specify the test number (1 or 2) as an argument\n");
+			return 0;
+		}
+		//Test cont. allocation
+		if (testNum == 1)
+			test_kmalloc();
+		//Test nextfit strategy
+		else if (testNum == 2)
+			test_kmalloc_nextfit();
+	}
+	else if (isKHeapPlacementStrategyBESTFIT())
+	{
+		if (testNum == 0)
+		{
+			cprintf("Error: [Kernel.BestFit] must specify the test number (1 or 2) as an argument\n");
+			return 0;
+		}
+		if (testNum == 1)
+			test_kmalloc();
+		else if (testNum == 2)
+			test_kmalloc_bestfit1();
+		else if (testNum == 3)
+			test_kmalloc_bestfit2();
+	}
+
+	return 0;
+}
+int command_test_kfree(int number_of_arguments, char **arguments)
+{
+	if (isKHeapPlacementStrategyBESTFIT())
+	{
+		test_kfree_bestfit();
+	}
+	else
+		test_kfree();
+	return 0;
+}
+int command_test_kheap_phys_addr(int number_of_arguments, char **arguments)
+{
+	test_kheap_phys_addr();
+	return 0;
+}
+int command_test_kheap_virt_addr(int number_of_arguments, char **arguments)
+{
+	test_kheap_virt_addr();
+	return 0;
+}
+int command_test_three_creation_functions(int number_of_arguments, char **arguments)
+{
+	test_three_creation_functions();
+	return 0;
+}
+int command_test_krealloc(int number_of_arguments, char **arguments) {
+	test_krealloc();
+	return 0;
+}
+
+//END======================================================

@@ -13,10 +13,10 @@ extern struct Pseudodesc gdt_pd;
 extern char ptr_stack_top[], ptr_stack_bottom[];
 
 // These variables are set by detect_memory()
-uint32 maxpa;	// Maximum physical address
+//uint32 maxpa;	// Maximum physical address
 uint32 number_of_frames;	// Amount of physical memory (in frames)
-uint32 size_of_base_mem;		// Amount of base memory (in bytes)
-uint32 size_of_extended_mem;		// Amount of extended memory (in bytes)
+//uint32 size_of_base_mem;		// Amount of base memory (in bytes)
+//uint32 size_of_extended_mem;		// Amount of extended memory (in bytes)
 
 extern uint32* ptr_page_directory;
 extern uint32 phys_page_directory;
@@ -24,11 +24,12 @@ extern char* ptr_free_mem;
 
 extern struct Frame_Info *frames_info;
 extern struct Linked_List free_frame_list;	// Free list of physical frames
+extern struct Linked_List modified_frame_list;	// Free list of physical frames
 extern uint32 number_of_frames;
 
 /* This macro takes a user supplied address and turns it into
  * something that will cause a fault if it is a kernel address.  ULIM
- * itself is guaranteed never to contain a valid page.  
+ * itself is guaranteed never to contain a valid page.
  */
 #define TRUP(_p)   						\
 ({								\
@@ -41,7 +42,7 @@ extern uint32 number_of_frames;
  * and returns the corresponding physical address.  It panics if you pass it a
  * non-kernel virtual address.
  */
-#define K_PHYSICAL_ADDRESS(kva)						\
+#define STATIC_KERNEL_PHYSICAL_ADDRESS(kva)						\
 ({								\
 	uint32 __m_kva = (uint32) (kva);		\
 	if (__m_kva < KERNEL_BASE)					\
@@ -51,7 +52,7 @@ extern uint32 number_of_frames;
 
 /* This macro takes a physical address and returns the corresponding kernel
  * virtual address.  It panics if you pass an invalid physical address. */
-#define K_VIRTUAL_ADDRESS(pa)						\
+#define STATIC_KERNEL_VIRTUAL_ADDRESS(pa)						\
 ({								\
 	uint32 __m_pa = (pa);				\
 	uint32 __m_ppn = PPN(__m_pa);				\
@@ -61,7 +62,7 @@ extern uint32 number_of_frames;
 })
 
 /* This Macro creates a page table/direcotry entry (32 bits)
-* according to the format of Intel page table/diretory entry 
+* according to the format of Intel page table/diretory entry
 */
 #define CONSTRUCT_ENTRY(phys_frame_address, permissions) \
 ( \
@@ -71,7 +72,7 @@ extern uint32 number_of_frames;
 
 void	detect_memory();
 void 	turn_on_paging();
-void	page_check();
+//void	page_check();
 void	tlb_invalidate(uint32 *pgdir, void *ptr);
 void	check_boot_pgdir();
 void	setup_listing_to_all_page_tables_entries();

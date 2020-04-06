@@ -8,8 +8,9 @@ LIB_SRCFILES :=		lib/console.c \
 			lib/printfmt.c \
 			lib/readline.c \
 			lib/string.c \
-			lib/malloc.c \
-			lib/syscall.c
+			lib/uheap.c \
+			lib/syscall.c \
+			lib/concurrency.c
 
 
 
@@ -23,7 +24,7 @@ $(OBJDIR)/lib/%.o: lib/%.c
 	$(V)$(CC) -nostdinc $(USER_CFLAGS) -c -o $@ $<
 
 $(OBJDIR)/lib/%.o: lib/%.S
-	@echo + as [USER] $<
+	@echo + as[USER] $<
 	@mkdir -p $(@D)
 	$(V)$(CC) -nostdinc $(USER_CFLAGS) -c -o $@ $<
 

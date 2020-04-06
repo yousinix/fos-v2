@@ -21,6 +21,11 @@ static __inline void lidt(void *p) __attribute__((always_inline));
 static __inline void lldt(uint16 sel) __attribute__((always_inline));
 static __inline void ltr(uint16 sel) __attribute__((always_inline));
 static __inline void lcr0(uint32 val) __attribute__((always_inline));
+
+//Ahmed 2010
+static __inline void lcr2(uint32 val) __attribute__((always_inline));
+
+
 static __inline uint32 rcr0(void) __attribute__((always_inline));
 static __inline uint32 rcr2(void) __attribute__((always_inline));
 static __inline void lcr3(uint32 val) __attribute__((always_inline));
@@ -174,6 +179,16 @@ rcr0(void)
 	__asm __volatile("movl %%cr0,%0" : "=r" (val));
 	return val;
 }
+
+//Ahmed 2010:
+static __inline void
+lcr2(uint32 val)
+{
+	__asm __volatile("movl %0,%%cr2" : : "r" (val));
+}
+
+
+
 
 static __inline uint32
 rcr2(void)

@@ -28,9 +28,18 @@ KERN_SRCFILES :=	kern/entry.S \
 			kern/sched.c \
 			kern/syscall.c \
 			kern/kdebug.c \
+			kern/file_manager.c \
+			kern/semaphore_manager.c \
+			kern/shared_memory_manager.c \
+			kern/kheap.c \
+			kern/test_kheap.c \
+			kern/utilities.c \
+			kern/priority_manager.c \
+			kern/test_priority.c \
 			lib/printfmt.c \
 			lib/readline.c \
-			lib/string.c
+			lib/string.c \
+			lib/disk.c
 
 # Only build files if they exist.
 KERN_SRCFILES := $(wildcard $(KERN_SRCFILES))
@@ -63,7 +72,7 @@ $(OBJDIR)/kern/%.o: lib/%.c
 
 # How to build the kernel itself
 $(OBJDIR)/kern/kernel: $(KERN_OBJFILES) $(KERN_BINFILES) kern/kernel.ld
-	@echo + ld $@
+	@echo + ld -m elf_i386 $@
 	$(V)$(LD) -o $@ $(KERN_LDFLAGS) $(KERN_OBJFILES) $(GCC_LIB) -b binary $(KERN_BINFILES)
 	$(V)$(OBJDUMP) -S $@ > $@.asm
 	$(V)$(NM) -n $@ > $@.sym

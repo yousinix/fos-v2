@@ -7,6 +7,8 @@
 #define NULL	((void *) 0)
 #endif /* !NULL */
 
+#define BUFLEN 1024
+
 // lib/stdio.c
 void	cputchar(int c);
 int	getchar(void);
@@ -18,6 +20,7 @@ void	vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list
 
 // lib/printf.c
 int	cprintf(const char *fmt, ...);
+int	atomic_cprintf(const char *fmt, ...);
 int	vcprintf(const char *fmt, va_list);
 
 // lib/sprintf.c

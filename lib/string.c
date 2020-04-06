@@ -224,6 +224,61 @@ strtol(const char *s, char **endptr, int base)
 	return (neg ? -val : val);
 }
 
+void
+ltostr(long value, char *str)
+{
+	int neg = 0;
+	int s = 0 ;
+
+	// plus/minus sign
+	if (value < 0)
+	{
+		neg = 1;
+		str[0] = '-';
+		value = value * -1 ;
+		s++ ;
+	}
+	do
+	{
+		int mod = value % 10 ;
+		str[s++] = mod + '0' ;
+		value = value / 10 ;
+	} while (value % 10 != 0);
+
+	//reverse the string
+	int start = 0 ;
+	int end = s-1 ;
+	if (neg)
+		start = 1 ;
+	while(start<end)
+	{
+		char tmp = str[start] ;
+		str[start] = str[end] ;
+		str[end] = tmp;
+		start++ ;
+		end-- ;
+	}
+
+	str[s] = 0 ;
+	// we don't properly detect overflow!
+
+}
+
+void
+strcconcat(const char *str1, const char *str2, char *final)
+{
+	int len1 = strlen(str1);
+	int len2 = strlen(str2);
+	int s = 0 ;
+	for (s=0 ; s < len1 ; s++)
+		final[s] = str1[s] ;
+
+	int i = 0 ;
+	for (i=0 ; i < len2 ; i++)
+		final[s++] = str2[i] ;
+
+	final[s] = 0;
+}
 int strsplit(char *string, char *SPLIT_CHARS, char **argv, int * argc)
 {
 	// Parse the command string into splitchars-separated arguments

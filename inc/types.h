@@ -1,10 +1,20 @@
 #ifndef FOS_INC_TYPES_H
 #define FOS_INC_TYPES_H
 
+/// Screen logging definitions ===============================
+#define LOG_ENABLED 0
+
+#define LOG_STATMENT(statment) if (LOG_ENABLED) { statment; cprintf("\n"); }
+#define LOG_VARS(string, cprintf_variable_arguments) if (LOG_ENABLED) { cprintf(string,cprintf_variable_arguments); cprintf("\n"); }
+#define LOG_STRING(s) if (LOG_ENABLED) { cprintf(s); cprintf("\n");}
+#define LOG_STATMENT_NO_NEWLINE(a) if (LOG_ENABLED) { a;}
+///============================================================
+
 #ifndef NULL
 #define NULL ((void*) 0)
 #endif
 
+#define UINT_MAX 0xFFFFFFFF
 // Represents true-or-false values
 typedef int bool;
 
@@ -17,6 +27,11 @@ typedef int int32;
 typedef unsigned int uint32;
 typedef long long int64;
 typedef unsigned long long uint64;
+
+struct uint64
+{
+	uint32 low, hi;
+};
 
 // Pointers and addresses are 32 bits long.
 // We use pointer types to represent virtual addresses,
