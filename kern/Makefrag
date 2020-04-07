@@ -77,10 +77,10 @@ $(OBJDIR)/kern/kernel: $(KERN_OBJFILES) $(KERN_BINFILES) kern/kernel.ld
 	$(V)$(OBJDUMP) -S $@ > $@.asm
 	$(V)$(NM) -n $@ > $@.sym
 
-# How to build the FOS disk image
+# How to build the FOS disk image (210000)
 $(IMAGE): $(OBJDIR)/kern/kernel $(OBJDIR)/boot/boot
 	@echo + mk $@
-	$(V)dd if=/dev/zero of=$(IMAGE)~ count=10000 2>/dev/null
+	$(V)dd if=/dev/zero of=$(IMAGE)~ count=1110000 2>/dev/null
 	$(V)dd if=$(OBJDIR)/boot/boot of=$(IMAGE)~ conv=notrunc 2>/dev/null
 	$(V)dd if=$(OBJDIR)/kern/kernel of=$(IMAGE)~ seek=1 conv=notrunc 2>/dev/null
 	$(V)mv $(IMAGE)~ $(IMAGE)
