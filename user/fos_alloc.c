@@ -1,35 +1,47 @@
-
 #include <inc/lib.h>
 
-void
-_main(void)
-{	
-	int size = 10 ;
-	int *x = malloc(sizeof(int)*size) ;
-	int *y = malloc(sizeof(int)*size) ;
-	int *z = malloc(sizeof(int)*size) ;
 
+void _main(void)
+{	
+	//uint32 size = 2*1024*1024 +120*4096+1;
+	//uint32 size = 1*1024*1024 + 256*1024;
+	//uint32 size = 1*1024*1024;
+	uint32 size = 100;
+
+	unsigned char *x = malloc(sizeof(unsigned char)*size) ;
+	atomic_cprintf("x allocated at %x\n",x);
+
+	//unsigned char *y = malloc(sizeof(unsigned char)*size) ;
+	//cprintf("y allocated at %x\n",y);
+
+	//unsigned char *z = malloc(sizeof(unsigned char)*size) ;
+	//cprintf("z allocated at %x\n",z);
+	
 	int i ;
 	for (i = 0 ; i < size ; i++)
 	{
-		x[i] = i ;
-		y[i] = 10 ;
-		z[i] = (int)x[i]  * y[i]  ;
-	}
-	
-	for (i = 0 ; i < size ; i++)
-		cprintf("%d * %d = %d\n",x[i], y[i], z[i]);
-	
-	freeHeap();
-	cprintf("the heap is freed successfully\n");
-	z = malloc(sizeof(int)*size) ;
-	for (i = 0 ; i < size ; i++)
-	{
-		cprintf("x[i] = %d\t",x[i]);
-		cprintf("y[i] = %d\t",y[i]);
-		cprintf("z[i] = %d\n",z[i]);
-	
+		x[i] = i%256 ;
+		////y[i] = 10 ;
+		////y[i] = i%256 ;
+		////z[i] = (int)(x[i]  * y[i]);
+		////z[i] = i%256;
 	}
 
+	
+	for (i = size-7 ; i < size ; i++)
+		atomic_cprintf("x[%d] = %d\n",i, x[i]);
+	
+	free(x);
+
+	x = malloc(sizeof(unsigned char)*size) ;
+	
+	for (i = size-7 ; i < size ; i++)
+	{
+		atomic_cprintf("x[%d] = %d\n",i,x[i]);
+	}
+
+	free(x);
+	
 	return;	
 }
+

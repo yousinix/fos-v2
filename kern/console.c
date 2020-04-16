@@ -10,7 +10,7 @@
 
 
 void cons_intr(int (*proc)(void));
-
+int text_length = 0;
 
 /***** Serial I/O code *****/
 
@@ -55,7 +55,7 @@ serial_init(void)
 {
 	// Turn off the FIFO
 	outb(COM1+COM_FCR, 0);
-	
+
 	// Set speed; requires DLAB latch
 	outb(COM1+COM_LCR, COM_LCR_DLAB);
 	outb(COM1+COM_DLL, (uint8) (115200 / 9600));
@@ -131,7 +131,7 @@ cga_init(void)
 		*cp = was;
 		addr_6845 = CGA_BASE;
 	}
-	
+
 	/* Extract cursor location */
 	outb(addr_6845, 14);
 	pos = inb(addr_6845 + 1) << 8;
@@ -142,7 +142,8 @@ cga_init(void)
 	crt_pos = pos;
 }
 
-
+//2016: Preliminary backward and forward cursor movement was added to FOS
+// 		Thanks to student Abdullah Mohammad Ma3en, 3rd year, and TA Ghada Hamed.
 
 void
 cga_putc(int c)
@@ -160,6 +161,7 @@ cga_putc(int c)
 		break;
 	case '\n':
 		crt_pos += CRT_COLS;
+		text_length = 0;
 		/* fallthru */
 	case '\r':
 		crt_pos -= (crt_pos % CRT_COLS);
@@ -171,9 +173,22 @@ cga_putc(int c)
 		cons_putc(' ');
 		cons_putc(' ');
 		break;
-	default:
+	case 228:
+              if(crt_pos>0)
+		     crt_pos--;
+		     break;
+	case 229:
+		if (crt_pos < CRT_SIZE)
+			     crt_pos++;
+			     break;
+	default: {
+		if (c != KEY_LF && c != KEY_RT) {
 		crt_buf[crt_pos++] = c;		/* write the character */
+			if (crt_pos > 1920 + text_length)
+				text_length++;
+		}
 		break;
+	}
 	}
 
 	// What is the purpose of this?
@@ -208,90 +223,71 @@ cga_putc(int c)
 
 #define E0ESC		(1<<6)
 
-static uint8 shiftcode[256] = 
-{
-	[0x1D] CTL,
-	[0x2A] SHIFT,
-	[0x36] SHIFT,
-	[0x38] ALT,
-	[0x9D] CTL,
-	[0xB8] ALT
-};
+static uint8 shiftcode[256] = { [0x1D] CTL, [0x2A] SHIFT, [0x36] SHIFT, [0x38
+		] ALT, [0x9D] CTL, [0xB8] ALT };
 
-static uint8 togglecode[256] = 
-{
-	[0x3A] CAPSLOCK,
-	[0x45] NUMLOCK,
-	[0x46] SCROLLLOCK
-};
+static uint8 togglecode[256] = { [0x3A] CAPSLOCK, [0x45] NUMLOCK, [0x46
+		] SCROLLLOCK };
 
-static uint8 normalmap[256] =
-{
-	NO,   0x1B, '1',  '2',  '3',  '4',  '5',  '6',	// 0x00
-	'7',  '8',  '9',  '0',  '-',  '=',  '\b', '\t',
-	'q',  'w',  'e',  'r',  't',  'y',  'u',  'i',	// 0x10
-	'o',  'p',  '[',  ']',  '\n', NO,   'a',  's',
-	'd',  'f',  'g',  'h',  'j',  'k',  'l',  ';',	// 0x20
-	'\'', '`',  NO,   '\\', 'z',  'x',  'c',  'v',
-	'b',  'n',  'm',  ',',  '.',  '/',  NO,   '*',	// 0x30
+static uint8 normalmap[256] = {
+NO, 0x1B, '1', '2', '3', '4', '5',
+		'6',	// 0x00
+		'7', '8', '9', '0', '-', '=', '\b', '\t', 'q', 'w', 'e', 'r', 't', 'y',
+		'u',
+		'i',	// 0x10
+		'o', 'p', '[', ']', '\n', NO, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k',
+		'l',
+		';',	// 0x20
+		'\'', '`', NO, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/',
+		NO,
+		'*',	// 0x30
 	NO,   ' ',  NO,   NO,   NO,   NO,   NO,   NO,
-	NO,   NO,   NO,   NO,   NO,   NO,   NO,   '7',	// 0x40
-	'8',  '9',  '-',  '4',  '5',  '6',  '+',  '1',
-	'2',  '3',  '0',  '.',  NO,   NO,   NO,   NO,	// 0x50
-	[0x97] KEY_HOME,	[0x9C] '\n' /*KP_Enter*/,
-	[0xB5] '/' /*KP_Div*/,	[0xC8] KEY_UP,
-	[0xC9] KEY_PGUP,	[0xCB] KEY_LF,
-	[0xCD] KEY_RT,		[0xCF] KEY_END,
-	[0xD0] KEY_DN,		[0xD1] KEY_PGDN,
-	[0xD2] KEY_INS,		[0xD3] KEY_DEL
-};
+		NO, NO, NO, NO, NO, NO, NO,
+		'7',	// 0x40
+		'8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.', NO, NO, NO,
+		NO,	// 0x50
+		[0x97] KEY_HOME, [0x9C] '\n' /*KP_Enter*/, [0xB5] '/' /*KP_Div*/, [0xC8
+				] KEY_UP, [0xC9] KEY_PGUP, [0xCB] KEY_LF, [0xCD] KEY_RT, [0xCF
+				] KEY_END, [0xD0] KEY_DN, [0xD1] KEY_PGDN, [0xD2] KEY_INS, [0xD3
+				] KEY_DEL };
 
-static uint8 shiftmap[256] = 
-{
-	NO,   033,  '!',  '@',  '#',  '$',  '%',  '^',	// 0x00
-	'&',  '*',  '(',  ')',  '_',  '+',  '\b', '\t',
-	'Q',  'W',  'E',  'R',  'T',  'Y',  'U',  'I',	// 0x10
-	'O',  'P',  '{',  '}',  '\n', NO,   'A',  'S',
-	'D',  'F',  'G',  'H',  'J',  'K',  'L',  ':',	// 0x20
-	'"',  '~',  NO,   '|',  'Z',  'X',  'C',  'V',
-	'B',  'N',  'M',  '<',  '>',  '?',  NO,   '*',	// 0x30
+static uint8 shiftmap[256] = {
+NO, 033, '!', '@', '#', '$', '%',
+		'^',	// 0x00
+		'&', '*', '(', ')', '_', '+', '\b', '\t', 'Q', 'W', 'E', 'R', 'T', 'Y',
+		'U',
+		'I',	// 0x10
+		'O', 'P', '{', '}', '\n', NO, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K',
+		'L',
+		':',	// 0x20
+		'"', '~', NO, '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', NO,
+		'*',	// 0x30
 	NO,   ' ',  NO,   NO,   NO,   NO,   NO,   NO,
-	NO,   NO,   NO,   NO,   NO,   NO,   NO,   '7',	// 0x40
-	'8',  '9',  '-',  '4',  '5',  '6',  '+',  '1',
-	'2',  '3',  '0',  '.',  NO,   NO,   NO,   NO,	// 0x50
-	[0x97] KEY_HOME,	[0x9C] '\n' /*KP_Enter*/,
-	[0xB5] '/' /*KP_Div*/,	[0xC8] KEY_UP,
-	[0xC9] KEY_PGUP,	[0xCB] KEY_LF,
-	[0xCD] KEY_RT,		[0xCF] KEY_END,
-	[0xD0] KEY_DN,		[0xD1] KEY_PGDN,
-	[0xD2] KEY_INS,		[0xD3] KEY_DEL
-};
+		NO, NO, NO, NO, NO, NO, NO,
+		'7',	// 0x40
+		'8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.', NO, NO, NO,
+		NO,	// 0x50
+		[0x97] KEY_HOME, [0x9C] '\n' /*KP_Enter*/, [0xB5] '/' /*KP_Div*/, [0xC8
+				] KEY_UP, [0xC9] KEY_PGUP, [0xCB] KEY_LF, [0xCD] KEY_RT, [0xCF
+				] KEY_END, [0xD0] KEY_DN, [0xD1] KEY_PGDN, [0xD2] KEY_INS, [0xD3
+				] KEY_DEL };
 
 #define C(x) (x - '@')
+#define KEY_SPACE 0xFF
 
-static uint8 ctlmap[256] = 
-{
-	NO,      NO,      NO,      NO,      NO,      NO,      NO,      NO, 
-	NO,      NO,      NO,      NO,      NO,      NO,      NO,      NO, 
-	C('Q'),  C('W'),  C('E'),  C('R'),  C('T'),  C('Y'),  C('U'),  C('I'),
-	C('O'),  C('P'),  NO,      NO,      '\r',    NO,      C('A'),  C('S'),
-	C('D'),  C('F'),  C('G'),  C('H'),  C('J'),  C('K'),  C('L'),  NO, 
-	NO,      NO,      NO,      C('\\'), C('Z'),  C('X'),  C('C'),  C('V'),
-	C('B'),  C('N'),  C('M'),  NO,      NO,      C('/'),  NO,      NO,
-	[0x97] KEY_HOME,
-	[0xB5] C('/'),		[0xC8] KEY_UP,
-	[0xC9] KEY_PGUP,	[0xCB] KEY_LF,
-	[0xCD] KEY_RT,		[0xCF] KEY_END,
-	[0xD0] KEY_DN,		[0xD1] KEY_PGDN,
-	[0xD2] KEY_INS,		[0xD3] KEY_DEL
-};
+static uint8 ctlmap[256] = {
+	NO,      NO,      NO,      NO,      NO,      NO,      NO,      NO,
+NO, NO, NO, NO, NO, NO, NO, NO, C('Q'), C('W'), C('E'), C('R'), C('T'), C('Y'),
+		C('U'), C('I'), C('O'), C('P'), NO, NO, '\r', NO, C('A'), C('S'), C(
+				'D'), C('F'), C('G'), C('H'), C('J'), C('K'), C('L'), NO,
+		NO, NO, NO, C('\\'), C('Z'), C('X'), C('C'), C('V'), C('B'), C('N'), C(
+				'M'), NO, NO, C('/'), NO, NO, [0x39] KEY_SPACE, /*space*/
+		[0x9D] NO, /*right Ctrl*/
+		[0x97] KEY_HOME, [0xB5] C('/'), [0xC8] KEY_UP, [0xC9] KEY_PGUP, [0xCB
+				] KEY_LF, [0xCD] KEY_RT, [0xCF] KEY_END, [0xD0] KEY_DN, [0xD1
+				] KEY_PGDN, [0xD2] KEY_INS, [0xD3] KEY_DEL };
 
-static uint8 *charcode[4] = {
-	normalmap,
-	shiftmap,
-	ctlmap,
-	ctlmap
-};
+static uint8 *charcode[4] = { normalmap, shiftmap, ctlmap, ctlmap };
 
 /*
  * Get data from the keyboard.  If we finish a character, return it.  Else 0.
@@ -328,6 +324,22 @@ kbd_proc_data(void)
 	shift ^= togglecode[data];
 
 	c = charcode[shift & (CTL | SHIFT)][data];
+	if (c == KEY_DEL) {
+		if (text_length > 0) {
+			if (crt_pos == 1920 + text_length)
+				return 0;
+			else {
+			text_length--;
+				int crt_pos_Length = crt_pos - 1925;
+				for (int i = crt_pos; crt_pos_Length <= text_length;
+						++i, crt_pos_Length++) {
+					crt_buf[i] = crt_buf[i + 1];
+				}
+				return c;
+			}
+		}
+		return 0;
+	}
 	if (shift & CAPSLOCK) {
 		if ('a' <= c && c <= 'z')
 			c += 'A' - 'a';
@@ -336,6 +348,10 @@ kbd_proc_data(void)
 	}
 
 	// Process special keys
+	if ((int) shift == NUMLOCK && c >= '0' && c <= '9')
+		return 0;
+	if (c == 255)
+		return 0;
 	// Ctrl-Alt-Del: reboot
 	if (!(~shift & (CTL | ALT)) && c == KEY_DEL) {
 		cprintf("Rebooting!\n");
@@ -405,6 +421,68 @@ cons_getc(void)
 		if (cons.rpos == CONSBUFSIZE)
 			cons.rpos = 0;
 		return c;
+	}
+	return 0;
+}
+
+// return the next input character from the console, or 0 if none waiting
+int
+cons_getc2(void)
+{
+	int c;
+
+	// poll for any pending input characters,
+	// so that this function works even when interrupts are disabled
+	// (e.g., when called from the kernel monitor).
+
+	int c1 = 0;
+	//serial_intr();
+	{
+		if (serial_exists)
+		{
+			if ((c1 = serial_proc_data()) != -1) {
+				if (c1 == 0)
+				{
+					//continue;
+				}
+				else
+				{
+					cons.buf[cons.wpos++] = c1;
+					if (cons.wpos == CONSBUFSIZE)
+						cons.wpos = 0;
+				}
+			}
+		}
+	}
+
+	int c2 = 0;
+	//kbd_intr();
+	{
+		if ((c2 = kbd_proc_data()) != -1) {
+			if (c2 == 0)
+			{
+				//continue;
+			}
+			else
+			{
+				cons.buf[cons.wpos++] = c2;
+				if (cons.wpos == CONSBUFSIZE)
+					cons.wpos = 0;
+			}
+		}
+	}
+
+	// grab the next character from the input buffer.
+	//cprintf("%d, %d \n", c1, c2);
+	//if(c1 > 0 && c2 > 0)
+	if(c2 > 0)
+	{
+		if (cons.rpos != cons.wpos) {
+			c = cons.buf[cons.rpos++];
+			if (cons.rpos == CONSBUFSIZE)
+				cons.rpos = 0;
+			return c;
+		}
 	}
 	return 0;
 }
