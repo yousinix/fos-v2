@@ -66,7 +66,7 @@ include user/Makefrag
 
 GDBPORT 	= 26000
 QEMUGDB 	= -gdb tcp::$(GDBPORT)
-QEMUOPTS 	= -drive file=$(IMAGE),media=disk,format=raw -smp 2 -m 256 $(QEMUEXTRAS)
+QEMUOPTS 	= -drive file=$(IMAGE),media=disk,format=raw -smp 1 -m 256 $(QEMUEXTRAS)
 
 qemu:
 	$(V)$(QEMU) -serial mon:stdio $(QEMUOPTS)
