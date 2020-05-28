@@ -1,11 +1,12 @@
 # FOSv2
 
-FOS is [ASU][asu]'s version, _modified by Dr. Ahmed Salah_, of [MIT][mit]'s [JOS][jos] educational operating system.  
-**FOSv2** is an improvement of the current version of FOS.
+[FOS][fos-v1] is an educational OS for Ain Shams University Operating Systems Course CSW355, forked and refactored from [MIT Operating Systems Lab 6.828][mit-6.828]. It was created by [Dr. Mahmoud Hossam][dr-m-h] and currently maintained by [Dr. Ahmed Salah][dr-a-s].  
+**FOSv2** is the next version of FOS. It provides a much faster and better environment using other editing and virtualization tools.
 
-[asu]: http://cis.asu.edu.eg/
-[mit]: http://www.mit.edu/
-[jos]: https://pdos.csail.mit.edu/6.828/2018/overview.html
+[fos-v1]: https://github.com/mahossam/FOS-Ain-Shams-University-Educational-OS
+[dr-m-h]: https://github.com/mahossam/
+[dr-a-s]: mailto:ahmed_salah@cis.asu.edu.eg
+[mit-6.828]: http://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-828-operating-system-engineering-fall-2012/
 
 <!-- TOC depthFrom:2 -->
 
