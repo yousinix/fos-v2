@@ -132,7 +132,20 @@ export PATH="$PATH:/opt/cross/bin"
 1. Start Debugging → <kbd>F5</kbd>.
 1. Fix your bugs!
 
-## 5. Contribute
+## 5. Assignments
+
+1. it is a good idea to clone a seprate version for your assignments using:
+```bash
+   git clone https://github.com/YoussefRaafatNasry/fos-v2.git
+   ```
+1. Open assignment makefrag file in your assignment folder.
+1. Copy the lines starting from line 16 till the end of the list (the line above the next #).
+1. Open the makefrag file in the Project you cloned.
+1. Delete the same list and paste the one you copied in that place and save the file.
+
+
+
+## 6. Contribute
 
 - See the project's upcoming changes [here][project].
 - Submit a [PR][compare] with your requested changes. Contributions are always welcomed.
