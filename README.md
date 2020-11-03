@@ -142,7 +142,7 @@ it is a good idea to clone a seprate version for your assignments using:
 1. Copy the lines starting from line 16 till the end of the list (the line above the next #).
 1. Open the makefrag file in the Project you cloned.
 1. Delete the same list and paste the one you copied in that place and save the file.
-
+1. Now copy the rest of the files from the assignment folder into the /fos-v2/kern folder and choose replace for any conflicts
 
 
 ## 6. Contribute
