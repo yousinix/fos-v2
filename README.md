@@ -134,7 +134,8 @@ export PATH="$PATH:/opt/cross/bin"
 
 ## 5. Assignments
 
-it is a good idea to clone a seprate version for your assignments using:
+1. it is a good idea to clone a seprate version for your assignments using:
+<br/>
 ```bash
    git clone https://github.com/YoussefRaafatNasry/fos-v2.git
    ```
