@@ -17,7 +17,7 @@
     - [2.3. Linux](#23-linux)
 - [3. Setup Workspace](#3-setup-workspace)
 - [4. Debugging](#4-debugging)
-- [5. assignments](#5-assignments)
+- [5. Assignments](#5-assignments)
 - [6. Contribute](#6-contribute)
 
 <!-- /TOC -->
