@@ -17,7 +17,8 @@
     - [2.3. Linux](#23-linux)
 - [3. Setup Workspace](#3-setup-workspace)
 - [4. Debugging](#4-debugging)
-- [5. Contribute](#5-contribute)
+- [5. Solve FOSv1 Assignments on FOSv2](#5-solve-fosv1-assignments-on-fosv2)
+- [6. Contribute](#6-contribute)
 
 <!-- /TOC -->
 
@@ -132,7 +133,20 @@ export PATH="$PATH:/opt/cross/bin"
 1. Start Debugging → <kbd>F5</kbd>.
 1. Fix your bugs!
 
-## 5. Contribute
+## 5. Solve FOSv1 Assignments on FOSv2
+
+FOSv2 has changed [`kern/Makefrag`][kern-makefrag] in [`8e2612dc`][8e2612dc-diff]. This changes can cause errors after adding assignments' files _(which usually conatin a `kern/Makefrag` file made for FOSv1)_. To solve this issue:
+
+1. Copy the assignments' files into your **FOSv2** project _(choose overwrite if prompted)_.
+1. Open the new `kern/Makefrag` and replace [these lines][old-makefrag-lines] by [those ones][new-makefrag-lines].  
+   _(or simply replace all occurences of `$(OBJDIR)/kern/bochs.img` by `$(IMAGE)`)_
+
+[kern-makefrag]: https://github.com/YoussefRaafatNasry/fos-v2/blob/master/kern/Makefrag
+[8e2612dc-diff]: https://github.com/YoussefRaafatNasry/fos-v2/commit/8e2612dc7704dd7716caf6cf9bb42ebd63dd8154#diff-92c5d30afff461ec71534ce1894d6fce755d04937f8b29837eb45ac01b6a7564
+[old-makefrag-lines]: https://github.com/YoussefRaafatNasry/fos-v2/blob/8639fae15e1de34f8ce40ce98dfff434158c0a90/kern/Makefrag#L71-L79
+[new-makefrag-lines]: https://github.com/YoussefRaafatNasry/fos-v2/blob/5389c176351af7a089853d4c84aa1ea537efe296/kern/Makefrag#L71-L79
+
+## 6. Contribute
 
 - See the project's upcoming changes [here][project].
 - Submit a [PR][compare] with your requested changes. Contributions are always welcomed.
