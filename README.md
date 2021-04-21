@@ -61,6 +61,7 @@ FOS needs an Linux environment to run as expected. For Windows users, the method
 
 1. **Update `PATH`:**
 
+   - how to find the `PATH` environment variable: [here]
    - Add the following to your `PATH` environment variable:
 
      ```path
@@ -68,12 +69,14 @@ FOS needs an Linux environment to run as expected. For Windows users, the method
      C:\cygwin\bin
      C:\cygwin\opt\cross\bin
      ```
+   
 
 [cygwin]: https://cygwin.com/
 [dl-cygwin-32]: https://cygwin.com/install.html
 [dl-toolchain]: https://github.com/YoussefRaafatNasry/fos-v2/releases/tag/toolchain
 [qemu]: https://www.qemu.org/
 [dl-qemu]: https://qemu.weilnetz.de/w64/2020/
+[here]: https://java.com/en/download/help/path.html
 
 ### 2.2. Windows - WSL
 
