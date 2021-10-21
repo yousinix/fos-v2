@@ -93,7 +93,7 @@ The [Windows Subsystem for Linux][wsl] lets developers run a GNU/Linux environme
 ```bash
 # Required Packages
 sudo apt-get update
-sudo apt-get install build-essential qemu-system-i386 gdb
+sudo apt-get install build-essential qemu-system-i386 gdb libfl-dev
 
 # Create directory
 sudo mkdir /opt/cross
