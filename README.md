@@ -93,7 +93,7 @@ The [Windows Subsystem for Linux][wsl] lets developers run a GNU/Linux environme
 ```bash
 # Required Packages
 sudo apt-get update
-sudo apt-get install build-essential qemu-system-i386 gdb
+sudo apt-get install build-essential qemu-system-i386 gdb libfl-dev
 
 # Create directory
 sudo mkdir /opt/cross
@@ -105,7 +105,7 @@ sudo tar xjf i386-elf-toolchain-linux.tar.bz2
 sudo rm i386-elf-toolchain-linux.tar.bz2
 
 # Update your PATH in your ~/.bashrc file.
-export PATH="$PATH:/opt/cross/bin"
+echo 'export PATH="$PATH:/opt/cross/bin"' >> ~/.bashrc
 ```
 
 ## 3. Setup Workspace
