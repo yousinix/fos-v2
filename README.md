@@ -105,7 +105,7 @@ sudo tar xjf i386-elf-toolchain-linux.tar.bz2
 sudo rm i386-elf-toolchain-linux.tar.bz2
 
 # Update your PATH in your ~/.bashrc file.
-export PATH="$PATH:/opt/cross/bin"
+echo 'export PATH="$PATH:/opt/cross/bin"' >> ~/.bashrc
 ```
 
 ## 3. Setup Workspace
