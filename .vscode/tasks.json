@@ -5,7 +5,7 @@
       "label": "build",
       "detail": "Compile and Run FOS",
       "type": "shell",
-      "command": "make && make qemu",
+      "command": "make qemu",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -15,7 +15,7 @@
       "label": "build-debug",
       "detail": "Compile and Run FOS in debug mode",
       "type": "shell",
-      "command": "make && make qemu-gdb",
+      "command": "make qemu-gdb",
       "isBackground": true,
       "problemMatcher": {
         "pattern": [
