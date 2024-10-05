@@ -9,7 +9,7 @@
 V 			:= @
 TOP 		:= .
 OBJDIR 		:= obj
-TOOLPREFIX 	:= i386-elf-
+TOOLPREFIX 	:= /opt/cross/bin/i386-elf-
 QEMU 		:= qemu-system-i386
 PERL		:= perl
 IMAGE 		:= $(OBJDIR)/fos.img

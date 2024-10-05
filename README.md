@@ -22,6 +22,13 @@
 
 <!-- /TOC -->
 
+### Notes about this fork:
+
+- QEMU doesn't support scrolling by default and several solutions found on the internet doesn't seem to work with this project for some reason.
+- Another issue when building an error with qemu was always present it was solved in this [issue](https://github.com/yousinix/fos-v2/issues/12#issuecomment-2391239145) thanks to [josefnagy1999](https://github.com/josefnagy1999)
+- I tried to check wether the QEMU problem was present in Windows too, but I had some problems with getting FOS to work on VSCode in Windows, I will try to look into it but in the meantime it's open to contribution. 
+- Steps to install and run on Arch based distros were added.
+
 ## 1. What's Different?
 
 1. **No Eclipse!** — Can be used with any text editor, _defaults to Visual Studio Code_.
@@ -92,8 +99,14 @@ The [Windows Subsystem for Linux][wsl] lets developers run a GNU/Linux environme
 
 ```bash
 # Required Packages
+
+# On Debian-based distros
 sudo apt-get update
 sudo apt-get install build-essential qemu-system-i386 gdb libfl-dev
+
+# On Arch-based distros
+sudo pacman -Syu
+sudo pacman -S base-devel qemu-arch-extra gdb flex
 
 # Create directory
 sudo mkdir /opt/cross
@@ -126,6 +139,7 @@ echo 'export PATH="$PATH:/opt/cross/bin"' >> ~/.bashrc
 [dl-repo]: https://github.com/YoussefRaafatNasry/fos-v2/archive/master.zip
 
 > \*Cloning is recommended to get the latest changes using `git pull`
+
 
 ## 4. Debugging
 
