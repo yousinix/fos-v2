@@ -92,14 +92,8 @@ The [Windows Subsystem for Linux][wsl] lets developers run a GNU/Linux environme
 
 ```bash
 # Required Packages
-
-# On Debian-based distros
 sudo apt-get update
 sudo apt-get install build-essential qemu-system-i386 gdb libfl-dev
-
-# On Arch-based distros
-sudo pacman -Syu
-sudo pacman -S base-devel qemu-full gdb flex wget
 
 # Create directory
 sudo mkdir /opt/cross
