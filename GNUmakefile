@@ -69,7 +69,7 @@ QEMUGDB 	= -gdb tcp::$(GDBPORT)
 QEMUOPTS 	= -drive file=$(IMAGE),media=disk,format=raw -smp 2 -m 32 $(QEMUEXTRAS)
 
 qemu: all
-	$(V)$(QEMU) -serial mon:stdio $(QEMUOPTS)
+	$(V)$(QEMU) -parallel mon:stdio $(QEMUOPTS)
 
 qemu-gdb: all
 	$(QEMU) $(QEMUOPTS) -S $(QEMUGDB)
