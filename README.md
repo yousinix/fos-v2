@@ -127,7 +127,6 @@ echo 'export PATH="$PATH:/opt/cross/bin"' >> ~/.bashrc
 
 > \*Cloning is recommended to get the latest changes using `git pull`
 
-
 ## 4. Debugging
 
 1. Add breakpoints to your code.
